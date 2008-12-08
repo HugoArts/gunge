@@ -6,12 +6,14 @@ from gunge import event
 
 class Sprite:
     """Base class for all game objects - 2D only"""
-    handlers = {}
+    handlers = []
 
     def __init__(self, img, rect):
         self.img = img
         self.rect = rect
+        self.binders = []
 
-        for name, handler in self.handlers.items():
-            handler.func = getattr(self, name)
-            event.manager.bind(handler)
+        for name, (evt_type, attr_filter) in self.handlers.items():
+            binder = event.Binder(evt_type, getattr(self, name), attr_filter)
+            self.binders.append(binder)
+            event.manager.bind(binder)

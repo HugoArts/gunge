@@ -45,15 +45,27 @@ class Binder:
 
     def __call__(self, event):
         """this is used as the callback activation, so that regular functions can also be added to the manager""" 
-        # if the type matches, and all filter values match their event attributes, the handler is called
-        if event.type is self.type and all(filter_val == getattr(event, filter_key) for (filter_val, filter_key) in self.filter.items()):
-            self.func(event)
+        #checking whether the filter matches. Several things are accepted as filter values
+        for key, value in self.filter.items():
+            #set: pass if any of the sets' values matches the event attribute
+            if type(value) is set and all(val != getattr(event, key) for val in value):
+                return
+            #function: pass if the function returns True when called with the event attribute
+            elif inspect.isroutine(value) and not value(getattr(event, key)):
+                return
+            #anything else: pass if the value matches the event attribute
+            elif value != getattr(event, key):
+                return
+
+        self.func(event)
 
 
 def bind(handler_list, eventtype, attr_filter):
     """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable"""
     def decorator(func):
-        handler = Handler(eventtype, func, attr_filter)
-        handler_list[handler.func_name] = handler
+        if len(inspect.getargs(func)[0]) != 2:
+            raise ValueError("Function does not have correct number of arguments (expected (self, event))")
+
+        handler_list.append((eventtype, attr_filter))
         return func
     return decorator
