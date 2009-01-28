@@ -47,14 +47,15 @@ class Binder:
         """this is used as the callback activation, so that regular functions can also be added to the manager""" 
         #checking whether the filter matches. Several things are accepted as filter values
         for key, value in self.filter.items():
+            event_key = getattr(event, key)
             #set: pass if any of the sets' values matches the event attribute
-            if type(value) is set and all(val != getattr(event, key) for val in value):
+            if type(value) is set and all(val != event_key for val in value):
                 return
             #function: pass if the function returns True when called with the event attribute
-            elif inspect.isroutine(value) and not value(getattr(event, key)):
+            elif inspect.isroutine(value) and not value(event_key):
                 return
             #anything else: pass if the value matches the event attribute
-            elif value != getattr(event, key):
+            elif value != event_key:
                 return
 
         self.func(event)
