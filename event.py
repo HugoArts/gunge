@@ -2,24 +2,30 @@
 
 """event.py - implement callback based event handling on top of the pygame event queue."""
 
-import pygame
+import pygame, inspect
 
 class Manager:
     """contains the main loop that handles all the events"""
 
     def __init__(self):
         self.handlers = {}
-        
-    def bind(self, handler):
+        self.bind(self.on_quit, pygame.QUIT)
+
+    def on_quit(self, event):
+        self.keeprunning = False
+
+    def bind(self, handler, event_type=None):
         """bind handler object. The handler's callback will be called if the event occurs"""
-        if handler.event_type not in self.handlers:
-            self.handlers[handler.type] = []
+        event_type = event_type or handler.type
+        if event_type not in self.handlers:
+            self.handlers[event_type] = []
 
-       self.handlers[handler.type].append(handler)
+        self.handlers[event_type].append(handler)
 
-    def unbind(self, handler):
+    def unbind(self, handler, event_type=None):
         """unbind previously bound handler"""
-        self.handlers[handler.type].remove(handler)
+        event_type = event_type or handler.type
+        self.handlers[event_type].remove(handler)
 
     def mainloop(self):
         """main loop of the program, dispatches events to handlers""" 
@@ -64,9 +70,10 @@ class Binder:
 def bind(handler_list, eventtype, attr_filter):
     """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable"""
     def decorator(func):
-        if len(inspect.getargs(func)[0]) != 2:
+        print func
+        if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
 
-        handler_list.append((eventtype, attr_filter))
+        handler_list.append((func.func_name, eventtype, attr_filter))
         return func
     return decorator
