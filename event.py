@@ -55,11 +55,11 @@ class Binder:
         for key, value in self.filter.items():
             event_key = getattr(event, key)
             #set: pass if any of the sets' values matches the event attribute
-            if type(value) is set and all(val != event_key for val in value):
-                return
+            if type(value) is set:
+                if event_key not in value: return
             #function: pass if the function returns True when called with the event attribute
-            elif inspect.isroutine(value) and not value(event_key):
-                return
+            elif inspect.isroutine(value):
+                if not value(event_key): return
             #anything else: pass if the value matches the event attribute
             elif value != event_key:
                 return
