@@ -1,0 +1,5 @@
+#gitignore file:
+# ignore vim swap files and compiled python files
+
+.*.swp
+*.pyc
