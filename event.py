@@ -111,7 +111,6 @@ def bind(eventtype, attr_filter=None):
         attr_filter = {}
 
     def decorator(func):
-        print func
         if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
 
