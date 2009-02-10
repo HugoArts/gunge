@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 
-"""event.py - implement callback based event handling on top of the pygame event queue."""
+"""implement callback based event handling on top of the pygame event queue.
 
-import pygame, inspect
+Some of the features are pseudo-static event binding using decorator syntax and advanced event filtering"""
+
+import pygame
+import inspect
 
 class Manager:
     """contains the main loop that handles all the events"""
@@ -12,10 +15,14 @@ class Manager:
         self.bind(self.on_quit, pygame.QUIT)
 
     def on_quit(self, event):
+        """default handler for the QUIT event, simply causes the mainloop function to return."""
         self.keeprunning = False
 
     def bind(self, handler, event_type=None):
-        """bind handler object. The handler's callback will be called if the event occurs"""
+        """bind handler object. The handler's callback will be called if the event occurs
+
+        The event_type argument is only needed if the handler argument is not a Binder instance
+        """
         event_type = event_type or handler.type
         if event_type not in self.handlers:
             self.handlers[event_type] = []
@@ -23,7 +30,10 @@ class Manager:
         self.handlers[event_type].append(handler)
 
     def unbind(self, handler, event_type=None):
-        """unbind previously bound handler"""
+        """unbind previously bound handler
+
+        The event_type argument is only needed if the handler argument is not a Binder instance
+        """
         event_type = event_type or handler.type
         self.handlers[event_type].remove(handler)
 
@@ -38,12 +48,18 @@ class Manager:
 
 
 class Binder:
-    """represents a handler for a specific event"""
+    """represents a callback for a specific event"""
 
-    def __init__(self, eventtype, callback, attr_filter):
+    def __init__(self, callback, eventtype, attr_filter):
         """create a new event binder for the specified type
-        the callback will be invoked if the event occurs, provided the binder is actually bound in the manager. The attr_filter can be used to specify
-        values that certain attributes of the event must have for the callback to be invoked. It is a dictionary of the form {'attr_name': required_value}
+
+        The callback will be invoked if the event occurs, provided the binder is actually bound in the manager. The attr_filter can be used to specify
+        constraints that certain attributes of the event must satisfy for the callback to be invoked. It is a dictionary of the form {'attr_name': filter_value}
+
+        The filter value can have several different types, with different behaviours:
+        - set:      passes if event.attr_name in filter_value
+        - function: passes if filter_value(event.attr_name) is True
+        - other:    passes if filter_value == event.attr_name
         """
         self.type = eventtype
         self.func = callback
@@ -67,13 +83,41 @@ class Binder:
         self.func(event)
 
 
-def bind(handler_list, eventtype, attr_filter):
-    """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable"""
+class Handler:
+    """class that can use the bind decorator.
+
+    The bind decorator basically annotates the method with the required binding information through an attribute called binders.
+    The actual binding is done in the __init__ function of this class. It looks through all of the members of the self object, and all
+    methods that have the binders attribute will be bound at that time. This means that derived classes will retain the bindings of their parents,
+    unless the method is overridden. In that case, the bindings must be explicity re-stated, which is desirable for clarity's sake.
+    """
+
+    def __init__(self):
+        self.binders = []
+        for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
+            self.binders.extend(Binder(method, *binder_data) for binder_data in method.binders)
+
+        for binder in self.binders:
+            manager.bind(binder)
+
+
+def bind(eventtype, attr_filter=None):
+    """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable
+
+    Note that this decorator must be used with an object derived from the Handler class, as the actual binding is done in the __init__ of that class.
+    It is perfectly legal for a function to have multiple event bindings, and the bind decorator handles this.
+    """
+    if attr_filter is None:
+        attr_filter = {}
+
     def decorator(func):
         print func
         if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
 
-        handler_list.append((func.func_name, eventtype, attr_filter))
+        try:
+            func.binders.append((eventtype, attr_filter))
+        except AttributeError:
+            func.binders = [(eventtype, attr_filter)]
         return func
     return decorator
