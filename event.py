@@ -50,7 +50,7 @@ class Manager:
 class Binder:
     """represents a callback for a specific event"""
 
-    def __init__(self, callback, eventtype, attr_filter):
+    def __init__(self, eventtype, attr_filter, *callbacks):
         """create a new event binder for the specified type
 
         The callback will be invoked if the event occurs, provided the binder is actually bound in the manager. The attr_filter can be used to specify
@@ -62,8 +62,8 @@ class Binder:
         - other:    passes if filter_value == event.attr_name
         """
         self.type = eventtype
-        self.func = callback
         self.filter = attr_filter
+        self.funcs = list(callbacks)
 
     def __call__(self, event):
         """this is used as the callback activation, so that regular functions can also be added to the manager""" 
@@ -80,7 +80,8 @@ class Binder:
             elif value != event_key:
                 return
 
-        self.func(event)
+        for funcs in self.funcs:
+            func(event)
 
 
 class Handler:
