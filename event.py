@@ -50,7 +50,7 @@ class Manager:
 class Binder:
     """represents a callback for a specific event"""
 
-    def __init__(self, callback, eventtype, attr_filter):
+    def __init__(self, eventtype, attr_filter, *callbacks):
         """create a new event binder for the specified type
 
         The callback will be invoked if the event occurs, provided the binder is actually bound in the manager. The attr_filter can be used to specify
@@ -62,8 +62,8 @@ class Binder:
         - other:    passes if filter_value == event.attr_name
         """
         self.type = eventtype
-        self.func = callback
         self.filter = attr_filter
+        self.funcs = list(callbacks)
 
     def __call__(self, event):
         """this is used as the callback activation, so that regular functions can also be added to the manager""" 
@@ -80,7 +80,8 @@ class Binder:
             elif value != event_key:
                 return
 
-        self.func(event)
+        for func in self.funcs:
+            func(event)
 
 
 class Handler:
@@ -93,13 +94,9 @@ class Handler:
     """
 
     def __init__(self):
-        self.binders = []
         for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
-            self.binders.extend(Binder(method, *binder_data) for binder_data in method.binders)
-
-        for binder in self.binders:
-            manager.bind(binder)
-
+            for binder in method.binders:
+                binder.funcs.append(method)
 
 def bind(eventtype, attr_filter=None):
     """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable
@@ -113,10 +110,12 @@ def bind(eventtype, attr_filter=None):
     def decorator(func):
         if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
+        binder = Binder(eventtype, attr_filter)
+        manager.bind(binder)
 
         try:
-            func.binders.append((eventtype, attr_filter))
+            func.binders.append(binder)
         except AttributeError:
-            func.binders = [(eventtype, attr_filter)]
+            func.binders = [binder]
         return func
     return decorator
