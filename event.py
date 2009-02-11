@@ -80,7 +80,7 @@ class Binder:
             elif value != event_key:
                 return
 
-        for funcs in self.funcs:
+        for func in self.funcs:
             func(event)
 
 
