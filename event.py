@@ -114,10 +114,12 @@ def bind(eventtype, attr_filter=None):
     def decorator(func):
         if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
+        binder = Binder(eventtype, attr_filter)
+        manager.bind(binder)
 
         try:
-            func.binders.append((eventtype, attr_filter))
+            func.binders.append(binder)
         except AttributeError:
-            func.binders = [(eventtype, attr_filter)]
+            func.binders = [binder]
         return func
     return decorator
