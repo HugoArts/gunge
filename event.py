@@ -94,13 +94,9 @@ class Handler:
     """
 
     def __init__(self):
-        self.binders = []
         for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
-            self.binders.extend(Binder(method, *binder_data) for binder_data in method.binders)
-
-        for binder in self.binders:
-            manager.bind(binder)
-
+            for binder in method.binders:
+                binder.funcs.append(method)
 
 def bind(eventtype, attr_filter=None):
     """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable
