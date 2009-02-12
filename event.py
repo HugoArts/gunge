@@ -43,8 +43,11 @@ class Manager:
 
         while self.keeprunning:
             for event in pygame.event.get():
-                for handler in self.handlers.get(event.type, []):
-                    handler(event)
+                try:
+                    for handler in self.handlers.get(event.type, []):
+                        handler(event)
+                except StopHandling:
+                    continue
 
 
 class Binder:
