@@ -98,6 +98,12 @@ class Handler:
             for binder in method.binders:
                 binder.funcs.append(method)
 
+
+class StopHandling(Exception):
+    """exception that can be thrown from inside an event handler to stop further handling of that event"""
+    pass
+
+
 def bind(eventtype, attr_filter=None):
     """decorator that can be used to statically bind methods. the first argument is a dict that must be declared as a class variable
 
