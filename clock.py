@@ -32,10 +32,12 @@ class Clock(gunge.event.Handler):
         If you wait with the mainloop too long, the game time will lag behind the real time too much, resulting in a flood of
         updates without any renders.
         """
-        self.time = self.get_time()
+        self.clock_time = self.get_time()
+        self.time = 0
         self.game_time = 0
         self.game_latency = 0
         self.last_update = 0
+        self.interpolate = 0
 
     @gunge.event.bind(gunge.event.UPDATE)
     def update(self, event):
@@ -45,16 +47,19 @@ class Clock(gunge.event.Handler):
         allowed. Otherwise, StopHandling is raised to stop the update from happening.
         """
         time_now = self.get_time()
-        time_passed = time_now - self.time
+        time_passed = time_now - self.clock_time
 
-        self.time = time_now
+        self.clock_time = time_now
+        self.time += time_passed
         self.game_latency += time_passed
 
-        if abs(self.game_latency - self.tick) < abs(self.game_latency):
+        if self.game_latency - self.tick > 0:
+        #if abs(self.game_latency - self.tick) < abs(self.game_latency):
             #this means that updating now would bring the game time closer to real time
             self.game_latency -= self.tick
             self.game_time += self.tick
             raise gunge.event.HandleAgain()
         else:
             #if that is not the case, we should not update
+            self.interpolate = (self.time - self.game_time) / self.tick
             raise gunge.event.StopHandling()
