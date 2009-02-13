@@ -46,12 +46,16 @@ class Manager:
         self.keeprunning = True
 
         while self.keeprunning:
-            for event in pygame.event.get() + [pygame.event.Event(UPDATE, {}), pygame.event.Event(RENDER, {})]:
-                try:
-                    for handler in self.handlers.get(event.type, []):
+            events = pygame.event.get() + [pygame.event.Event(UPDATE, {}), pygame.event.Event(RENDER, {})]
+            while not len(events) == 0:
+                event = events.pop()
+                for handler in self.handlers.get(event.type, []):
+                    try:
                         handler(event)
-                except StopHandling:
-                    continue
+                    except StopHandling:
+                        break
+                    except HandleAgain:
+                        events.insert(0, event)
 
 
 class Binder:
@@ -108,6 +112,11 @@ class Handler:
 
 class StopHandling(Exception):
     """exception that can be thrown from inside an event handler to stop further handling of that event"""
+    pass
+
+
+class HandleAgain(Exception):
+    """exception that can be thrown from inside an event handler to reinsert the current event into the front of the queue"""
     pass
 
 
