@@ -54,6 +54,7 @@ class Clock(gunge.event.Handler):
             #this means that updating now would bring the game time closer to real time
             self.game_latency -= self.tick
             self.game_time += self.tick
+            raise gunge.event.HandleAgain()
         else:
             #if that is not the case, we should not update
             raise gunge.event.StopHandling()
