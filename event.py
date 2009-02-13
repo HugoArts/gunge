@@ -7,6 +7,10 @@ Some of the features are pseudo-static event binding using decorator syntax and 
 import pygame
 import inspect
 
+#event types
+UPDATE = pygame.USEREVENT + 1
+RENDER = pygame.USEREVENT + 2
+
 class Manager:
     """contains the main loop that handles all the events"""
 
@@ -42,7 +46,7 @@ class Manager:
         self.keeprunning = True
 
         while self.keeprunning:
-            for event in pygame.event.get():
+            for event in pygame.event.get() + [pygame.event.Event(UPDATE, {}), pygame.event.Event(RENDER, {})]:
                 try:
                     for handler in self.handlers.get(event.type, []):
                         handler(event)
