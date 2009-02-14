@@ -6,6 +6,7 @@ Some of the features are pseudo-static event binding using decorator syntax and 
 
 import pygame
 import inspect
+import weakref
 
 #event types
 UPDATE = pygame.USEREVENT + 1
@@ -65,7 +66,7 @@ class Manager:
 class Binder:
     """represents a callback for a specific event"""
 
-    def __init__(self, eventtype, attr_filter, *callbacks):
+    def __init__(self, eventtype, attr_filter, callback):
         """create a new event binder for the specified type
 
         The callback will be invoked if the event occurs, provided the binder is actually bound in the manager. The attr_filter can be used to specify
@@ -78,7 +79,8 @@ class Binder:
         """
         self.type = eventtype
         self.filter = attr_filter
-        self.funcs = list(callbacks)
+        self.func = callback
+        self.instances = []
 
     def __call__(self, event):
         """this is used as the callback activation, so that regular functions can also be added to the manager""" 
@@ -95,8 +97,9 @@ class Binder:
             elif value != event_key:
                 return
 
-        for func in self.funcs:
-            func(event)
+        self.instances = filter(lambda x: x() is not None, self.instances)
+        for instance in self.instances:
+            self.func(instance(), event)
 
 
 class Handler:
@@ -112,13 +115,7 @@ class Handler:
         """intialize event handlers"""
         for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
             for binder in method.binders:
-                binder.funcs.append(method)
-
-    def kill(self):
-        """must be called, you cannot let an object go out of scope, because event handlers will keep it alive"""
-        for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
-            for binder in method.binders:
-                binder.funcs.remove(method)
+                binder.instances.append(weakref.ref(self))
 
 
 class StopHandling(Exception):
@@ -143,7 +140,7 @@ def bind(eventtype, attr_filter=None):
     def decorator(func):
         if len(inspect.getargspec(func)[0]) != 2:
             raise ValueError("Function does not have correct number of arguments (expected (self, event))")
-        binder = Binder(eventtype, attr_filter)
+        binder = Binder(eventtype, attr_filter, func)
         manager.bind(binder)
 
         try:
