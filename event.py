@@ -10,6 +10,7 @@ import inspect
 #event types
 UPDATE = pygame.USEREVENT + 1
 RENDER = pygame.USEREVENT + 2
+BUFSWAP = pygame.USEREVENT + 3
 
 class Manager:
     """contains the main loop that handles all the events"""
@@ -43,10 +44,13 @@ class Manager:
 
     def mainloop(self):
         """main loop of the program, dispatches events to handlers""" 
+        exit_events = [pygame.event.Event(UPDATE, {}),
+                       pygame.event.Event(RENDER, {}),
+                       pygame.event.Event(BUFSWAP, {})]
         self.keeprunning = True
 
         while self.keeprunning:
-            events = pygame.event.get() + [pygame.event.Event(UPDATE, {}), pygame.event.Event(RENDER, {})]
+            events = pygame.event.get() + exit_events
             while not len(events) == 0:
                 event = events.pop()
                 for handler in self.handlers.get(event.type, []):
