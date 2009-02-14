@@ -109,9 +109,16 @@ class Handler:
     """
 
     def __init__(self):
+        """intialize event handlers"""
         for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
             for binder in method.binders:
                 binder.funcs.append(method)
+
+    def kill(self):
+        """must be called, you cannot let an object go out of scope, because event handlers will keep it alive"""
+        for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
+            for binder in method.binders:
+                binder.funcs.remove(method)
 
 
 class StopHandling(Exception):
