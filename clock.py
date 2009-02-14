@@ -38,6 +38,7 @@ class Clock(gunge.event.Handler):
         self.game_latency = 0
         self.last_update = 0
         self.interpolate = 0
+        self.started = True
 
     @gunge.event.bind(gunge.event.UPDATE)
     def update(self, event):
@@ -46,6 +47,10 @@ class Clock(gunge.event.Handler):
         checks if doing an update now would bring game time closer to real time than it currently is. If so, the update is
         allowed. Otherwise, StopHandling is raised to stop the update from happening.
         """
+        if not self.started:
+            #TODO: create proper exception type for this
+            raise Exception("cannot call Clock.update, clock has not yet been started")
+
         time_now = self.get_time()
         time_passed = time_now - self.clock_time
 
