@@ -44,7 +44,7 @@ class Manager:
         self.handlers[event_type].remove(handler)
 
     def mainloop(self):
-        """main loop of the program, dispatches events to handlers""" 
+        """main loop of the program, dispatches events to handlers"""
         exit_events = [pygame.event.Event(UPDATE, {}),
                        pygame.event.Event(RENDER, {}),
                        pygame.event.Event(BUFSWAP, {})]
@@ -80,26 +80,42 @@ class Binder:
         self.type = eventtype
         self.filter = attr_filter
         self.func = callback
-        self.instances = []
 
-    def __call__(self, event):
-        """this is used as the callback activation, so that regular functions can also be added to the manager""" 
-        #checking whether the filter matches. Several things are accepted as filter values
+        if len(inspect.getargspec(callback)[0]) == 2:
+            self.instances = []
+            self.__call__ = self.method_call
+        else:
+            self.__call__ = self.function_call
+
+    def filter_check(self, event):
+        """check whether the filter matches the event."""
         for key, value in self.filter.items():
             event_key = getattr(event, key)
             #set: pass if any of the sets' values matches the event attribute
             if type(value) is set:
-                if event_key not in value: return
+                if event_key not in value: return False
             #function: pass if the function returns True when called with the event attribute
             elif inspect.isroutine(value):
-                if not value(event_key): return
+                if not value(event_key): return False
             #anything else: pass if the value matches the event attribute
             elif value != event_key:
-                return
+                return False
 
-        self.instances = filter(lambda x: x() is not None, self.instances)
-        for instance in self.instances:
-            self.func(instance(), event)
+        return True
+
+    def method_call(self, event):
+        """this is the callback activation method if the bound object is a method.
+
+        if the bound object is a function, function_call will be used instead. It differs because methods will be called on each instance.
+        """
+        if self.filter_check(event):
+            self.instances = filter(lambda x: x() is not None, self.instances)
+            for instance in self.instances:
+                self.func(instance(), event)
+
+    def function_call(self, event):
+        if self.filter_check(event):
+            self.func(event)
 
 
 class Handler:
@@ -138,8 +154,8 @@ def bind(eventtype, attr_filter=None):
         attr_filter = {}
 
     def decorator(func):
-        if len(inspect.getargspec(func)[0]) != 2:
-            raise ValueError("Function does not have correct number of arguments (expected (self, event))")
+        if len(inspect.getargspec(func)[0]) > 2:
+            raise ValueError("Function does not have correct number of arguments (expected (self, event) or (event))")
         binder = Binder(eventtype, attr_filter, func)
         manager.bind(binder)
 
