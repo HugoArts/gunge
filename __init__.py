@@ -8,3 +8,4 @@ manager = event.manager = event.Manager()
 
 #import other modules
 import clock
+import media
