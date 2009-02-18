@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""media.py - classes for loading media files
+"""classes for loading media files
 
 this file contains classes to load and store media files.
 The files can be loaded lazily, or at any time you see fit.
