@@ -24,7 +24,3 @@ class Display(gunge.event.Handler):
     @gunge.event.bind(gunge.event.BUFSWAP)
     def buffer_swap(self, event):
         pygame.display.flip()
-
-
-def lerp(prev_val, new_val, interpolation):
-    return prev_val + ((new_val - prev_val) * interpolation)
