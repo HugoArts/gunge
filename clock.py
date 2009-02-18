@@ -21,9 +21,19 @@ class Clock(gunge.event.Handler):
         gunge.event.Handler.__init__(self)
         self.tps = tps
         self.tick = 1. / tps
+        self.started = False
+        self.interpolate = 1.
 
         # time.clock is a low resolution timer on some systems, use time.time instead if it is
         self.get_time = time.clock if time.clock() - time.clock() != 0 else time.time
+
+    def set_tps(self, tps):
+        """set the amount of ticks per second of the clock. Can only be done before the clock starts"""
+        if self.started:
+            raise Exception("can not set tps if the clock already started")
+
+        self.tps = tps
+        self.tick = 1. / tps
 
     def start(self):
         """start the clock
@@ -37,7 +47,6 @@ class Clock(gunge.event.Handler):
         self.game_time = 0
         self.game_latency = 0
         self.last_update = 0
-        self.interpolate = 0
         self.started = True
 
     @gunge.event.bind(gunge.event.UPDATE)
@@ -48,8 +57,7 @@ class Clock(gunge.event.Handler):
         allowed. Otherwise, StopHandling is raised to stop the update from happening.
         """
         if not self.started:
-            #TODO: create proper exception type for this
-            raise Exception("cannot call Clock.update, clock has not yet been started")
+            return
 
         time_now = self.get_time()
         time_passed = time_now - self.clock_time
