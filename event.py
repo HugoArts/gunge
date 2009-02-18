@@ -7,6 +7,7 @@ Some of the features are pseudo-static event binding using decorator syntax and 
 import pygame
 import inspect
 import weakref
+import gunge
 
 #event types
 UPDATE = pygame.USEREVENT + 1
@@ -46,7 +47,7 @@ class Manager:
     def mainloop(self):
         """main loop of the program, dispatches events to handlers"""
         exit_events = [pygame.event.Event(UPDATE, {}),
-                       pygame.event.Event(RENDER, {}),
+                       pygame.event.Event(RENDER, {'interpolate': lambda: gunge.locals.clock.interpolate, 'display': gunge.locals.display}),
                        pygame.event.Event(BUFSWAP, {})]
         self.keeprunning = True
 
