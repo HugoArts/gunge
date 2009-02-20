@@ -11,12 +11,12 @@ class Sprite(gunge.event.Handler):
     two important attributes are the rect and img attributes. These are where the image is blitted, and what image is blitted, respectively
     """
 
-    def __init__(self, img, pos=(0,0), speed=(0,0)):
+    def __init__(self, img=None, pos=(0,0), speed=(0,0)):
         """initialize a sprite object. The img argument must be a pygame.Surface object"""
         gunge.event.Handler.__init__(self)
         
         self.img = img
-        self.rect = self.img.get_rect()
+        self.rect = self.img.get_rect() if type(self.img) is pygame.Surface else pygame.Rect(0, 0, 0, 0)
         self.rect.topleft = pos
         self.prev_rect = self.rect
 
