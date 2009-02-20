@@ -14,6 +14,8 @@ UPDATE = pygame.USEREVENT + 1
 RENDER = pygame.USEREVENT + 2
 BUFSWAP = pygame.USEREVENT + 3
 
+USEREVENT = pygame.USEREVENT + 4
+
 class Manager:
     """contains the main loop that handles all the events"""
 
