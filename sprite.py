@@ -21,6 +21,7 @@ class Sprite(gunge.event.Handler):
         self.prev_rect = self.rect
 
         self.speed = list(speed)
+        self.hidden = False
 
     @gunge.event.bind(gunge.event.UPDATE)
     def update(self, event):

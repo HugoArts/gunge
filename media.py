@@ -22,7 +22,6 @@ class ResourceLoader(dict):
         """ResourceLoader(paths) -> ResourceLoader
         paths is a tuple of directories to search through
         """
-        common.Singleton.__init__(self, set_as_global)
         self.paths = list(paths) if isinstance(paths, (list, tuple, set)) else [paths]
 
     def __missing__(self, key):
