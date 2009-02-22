@@ -4,7 +4,10 @@ __all__ = ('event', 'clock', 'media', 'display')
 
 #struct that will contain some objects like the event manager, display, and clock
 class locals:
-    pass
+    interpolate = None
+    manager = None
+    display = None
+    clock = None
 
 #many modules depend on the event.manager existing, so do that first
 import event
@@ -25,3 +28,6 @@ def init(display_size, caption, background=None, flags=0):
     locals.display = display.Display(display_size, caption, background, flags)
     locals.clock = clock.Clock(25)
     return (locals.manager, locals.display, locals.clock)
+
+def set_interpolation(func):
+    locals.interpolate = sprite.interpolate = func

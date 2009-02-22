@@ -2,6 +2,7 @@
 
 """base sprite class that works with the gunge clock, interpolating on renders between logic updates"""
 
+import math
 import gunge.event
 import pygame
 
@@ -30,11 +31,19 @@ class Sprite(gunge.event.Handler):
 
     @gunge.event.bind(gunge.event.RENDER)
     def render(self, event):
-        x = lerp(self.prev_rect.left, self.rect.left, event.interpolate())
-        y = lerp(self.prev_rect.top, self.rect.top, event.interpolate())
+        x = interpolate(self.prev_rect.left, self.rect.left, event.interpolate())
+        y = interpolate(self.prev_rect.top, self.rect.top, event.interpolate())
 
         event.display.screen.blit(self.img, (x, y))
 
 
 def lerp(prev, new, interpolation):
+    """linear interpolation between points prev and new. interpolation should be between 0 and 1."""
     return prev + ((new - prev) * interpolation)
+
+def cosine_interpolate(prev, new, interpolation):
+    """cosine interpolation between points prev and new. Slower than linear, but much smoother"""
+    interpolation = (1 - math.cos(interpolation * math.pi)) / 2.
+    return lerp(prev, new, interpolation)
+
+interpolate = cosine_interpolate
