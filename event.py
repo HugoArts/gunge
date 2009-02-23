@@ -136,6 +136,13 @@ class Handler:
             for binder in method.binders:
                 binder.instances.append(weakref.ref(self))
 
+    def kill(self):
+        """unbinds all event handlers for this instance. The worst thing that can be done to an object short of actually destroying it"""
+        for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
+            for binder in method.binders:
+                binder.instances = filter(lambda i: i() is not self, binder.instances)
+
+
 
 class StopHandling(Exception):
     """exception that can be thrown from inside an event handler to stop further handling of that event"""
