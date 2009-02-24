@@ -16,7 +16,7 @@ BUFSWAP = pygame.USEREVENT + 3
 
 USEREVENT = pygame.USEREVENT + 4
 
-class Manager:
+class Manager(object):
     """contains the main loop that handles all the events"""
 
     def __init__(self):
@@ -66,7 +66,7 @@ class Manager:
                         events.insert(0, event)
 
 
-class Binder:
+class Binder(object):
     """represents a callback for a specific event"""
 
     def __init__(self, eventtype, attr_filter, callback):
@@ -121,7 +121,7 @@ class Binder:
             self.func(event)
 
 
-class Handler:
+class Handler(object):
     """class that can use the bind decorator.
 
     The bind decorator basically annotates the method with the required binding information through an attribute called binders.

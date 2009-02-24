@@ -132,7 +132,7 @@ class SoundLoader(ResourceLoader):
         return self[filename].play(loops, maxtime)
 
 
-class NoSound:
+class NoSound(object):
     """NoSound - used in case there is no sound available, with a dummy play method"""
     def play(self):
         """play() -> None"""
