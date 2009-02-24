@@ -86,9 +86,12 @@ class Binder(object):
 
         if len(inspect.getargspec(callback)[0]) == 2:
             self.instances = []
-            self.__call__ = self.method_call
+            self.call = self.method_call
         else:
-            self.__call__ = self.function_call
+            self.call = self.function_call
+
+    def __call__(self, event):
+        self.call(event)
 
     def filter_check(self, event):
         """check whether the filter matches the event."""
