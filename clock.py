@@ -43,10 +43,17 @@ class Clock(gunge.event.Handler):
         updates without any renders.
         """
         self.clock_time = self.get_time()
+        self.since_last_render = self.get_time()
+
         self.time = 0
         self.game_time = 0
         self.game_latency = 0
         self.last_update = 0
+
+        self.frame_count = 0
+        self.frame_rate = 0
+        self.average_framerate = 0
+
         self.started = True
 
     @gunge.event.bind(gunge.event.UPDATE)
@@ -76,3 +83,17 @@ class Clock(gunge.event.Handler):
             #if that is not the case, we should not update
             self.interpolate = (self.time - self.game_time) / self.tick
             return gunge.event.HANDLE_STOP
+
+    @gunge.event.bind(gunge.event.BUFSWAP)
+    def bufswap(self, event):
+        time_now = self.get_time()
+        time_passed = time_now - self.since_last_render
+
+        self.since_last_render = time_now
+        self.frame_rate = 1. / time_passed
+
+        self.average_framerate = (self.average_framerate * self.frame_count + self.frame_rate) / (self.frame_count + 1)
+        self.frame_count += 1
+
+        if self.frame_count > 100:
+            self.frame_count = 0
