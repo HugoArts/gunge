@@ -16,6 +16,10 @@ BUFSWAP = pygame.USEREVENT + 3
 
 USEREVENT = pygame.USEREVENT + 4
 
+#event return codes
+HANDLE_AGAIN = -1
+HANDLE_STOP  = -2
+
 class Manager(object):
     """contains the main loop that handles all the events"""
 
@@ -52,17 +56,15 @@ class Manager(object):
                        pygame.event.Event(RENDER, {'interpolate': lambda: gunge.locals.clock.interpolate, 'display': gunge.locals.display}),
                        pygame.event.Event(BUFSWAP, {})]
         self.keeprunning = True
-
         while self.keeprunning:
             events = pygame.event.get() + exit_events
             while not len(events) == 0:
                 event = events.pop()
                 for handler in self.handlers.get(event.type, []):
-                    try:
-                        handler(event)
-                    except StopHandling:
+                    a = handler(event)
+                    if a == HANDLE_STOP:
                         break
-                    except HandleAgain:
+                    elif a == HANDLE_AGAIN:
                         events.insert(0, event)
 
 
@@ -144,17 +146,6 @@ class Handler(object):
         for name, method in inspect.getmembers(self, lambda mem: inspect.ismethod(mem) and hasattr(mem, 'binders')):
             for binder in method.binders:
                 binder.instances = filter(lambda i: i() is not self, binder.instances)
-
-
-
-class StopHandling(Exception):
-    """exception that can be thrown from inside an event handler to stop further handling of that event"""
-    pass
-
-
-class HandleAgain(Exception):
-    """exception that can be thrown from inside an event handler to reinsert the current event into the front of the queue"""
-    pass
 
 
 def bind(eventtype, attr_filter=None):
